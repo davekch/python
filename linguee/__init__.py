@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
 """linguee extension
-
 translate ger-eng with linguee
 
 Synopsis: <trigger> <word>"""
 
 
-from albertv0 import *
+from albert import Item, ClipAction, UrlAction
 import requests
 from xml.etree import ElementTree
 import os
@@ -15,12 +14,12 @@ import os
 
 lang = "deutsch-englisch"
 
-__iid__ = "PythonInterface/v0.1"
-__prettyname__ = "Linguee-deutsch-englisch"
-__version__ = "0.2"
-__trigger__ = "lin "
-__author__ = "Lucky Lukert, David Koch"
-__dependencies__ = []
+# __iid__ = "PythonInterface/v0.1"
+__title__ = "Linguee"
+__version__ = "0.2.2"
+__triggers__ = "lin "
+__authors__ = ["Lucky Lukert", "David Koch"]
+__py_deps__ = []
 
 iconPath = os.path.join(os.path.dirname(__file__), "linguee.svg")
 
@@ -30,7 +29,7 @@ def getItem(message):
         icon=iconPath,
         text=message,
         subtext="Linguee",
-        completion=__trigger__,
+        completion=__triggers__,
         actions=[],
     )
 
@@ -93,7 +92,7 @@ def handleQuery(query):
                     icon=iconPath,
                     text=result["word"],
                     subtext=", ".join(result["translations"]),
-                    completion=__trigger__ + result["word"],
+                    completion=__triggers__ + result["word"],
                     actions=[
                         UrlAction("Open", url),
                         ClipAction("Copy url to clipboard", url)
