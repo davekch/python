@@ -6,32 +6,92 @@ translate ger-eng with linguee
 Synopsis: <trigger> <word>"""
 
 
-from albert import Item, ClipAction, UrlAction
+from albert import *
 import requests
 from xml.etree import ElementTree
 import os
+import time
 
 
-lang = "deutsch-englisch"
+md_iid = "0.5"
+md_version = "0.3"
+md_name = "Linguee"
+md_description = "Translate with Linguee."
+md_maintainers = "@davekch"
 
-# __iid__ = "PythonInterface/v0.1"
-__title__ = "Linguee"
-__version__ = "0.2.2"
-__triggers__ = "lin "
-__authors__ = ["Lucky Lukert", "David Koch"]
-__py_deps__ = []
 
-iconPath = os.path.join(os.path.dirname(__file__), "linguee.svg")
+class Plugin(QueryHandler):
 
-def getItem(message):
-    return Item(
-        id=__prettyname__,
-        icon=iconPath,
-        text=message,
-        subtext="Linguee",
-        completion=__triggers__,
-        actions=[],
-    )
+    iconPath = os.path.join(os.path.dirname(__file__), "linguee.svg")
+    user_agent = "org.albert.linguee"
+    lang = "deutsch-englisch"
+
+    def id(self):
+        return __name__
+
+    def name(self):
+        return md_name
+
+    def description(self):
+        return md_description
+
+    def defaultTrigger(self):
+        return "lin "
+
+    def handleQuery(self, query):
+        querystr = query.string.strip()
+        if querystr:
+            if not query.isValid:
+                return
+
+            time.sleep(0.1)
+            results = []
+            for result in self.get_suggestions(querystr):
+                url = "http://www.linguee.de/{}/search?source=auto&query={}".format(
+                    self.lang,
+                    result["word"]
+                )
+                results.append(
+                    Item(
+                        id=result["word"],
+                        icon=[self.iconPath],
+                        text=result["word"],
+                        subtext=", ".join(result["translations"]),
+                        completion=result["word"],
+                        actions=[
+                            Action(
+                                "open",
+                                "look up word on linguee",
+                                lambda u=url: openUrl(u)
+                            ),
+                            Action(
+                                "copy",
+                                "Copy url to clipboard",
+                                lambda u=url: setClipBoardText(u)
+                            ),
+                        ],
+                    )
+                )
+            query.add(results)
+
+        else:
+            query.add(Item(
+                id="lin",
+                text=md_name,
+                subtext="Enter a word to translate",
+                icon=[self.iconPath]
+            ))
+
+    def get_suggestions(self, query):
+        response = requests.get(
+            "https://www.linguee.de/" + self.lang + "/search?",
+            # change the ch-parameter to get more/less results
+            params={"qe": query, "source": "auto", "cw": "820", "ch": "1000"},
+            headers={"User-Agent": self.user_agent}
+        )
+        return get_results(response.text)
+
+
 
 def clean_translation_item(item):
     # the translation_item contains information like word type etc but we're
@@ -68,38 +128,3 @@ def get_results(linguee_response):
 
     return results
 
-
-def get_suggestions(query):
-    response = requests.get(
-        "https://www.linguee.de/" + lang + "/search?",
-        # change the ch-parameter to get more/less results
-        params={"qe": query, "source": "auto", "cw": "820", "ch": "1000"},
-    )
-    return get_results(response.text)
-
-
-def handleQuery(query):
-    results = []
-    if query.isTriggered:
-        for result in get_suggestions(query.string):
-            url = "http://www.linguee.de/{}/search?source=auto&query={}".format(
-                lang,
-                result["word"]
-            )
-            results.append(
-                Item(
-                    id=result["word"],
-                    icon=iconPath,
-                    text=result["word"],
-                    subtext=", ".join(result["translations"]),
-                    completion=__triggers__ + result["word"],
-                    actions=[
-                        UrlAction("Open", url),
-                        ClipAction("Copy url to clipboard", url)
-                    ],
-                )
-            )
-        if len(results) == 0:
-            return [getItem("Sorry, there are no results.")]
-
-    return results
