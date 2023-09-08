@@ -13,32 +13,33 @@ import os
 import time
 
 
-md_iid = "0.5"
-md_version = "0.3"
+md_iid = "2.0"
+md_version = "0.4"
 md_name = "Linguee"
 md_description = "Translate with Linguee."
 md_maintainers = "@davekch"
 
 
-class Plugin(QueryHandler):
+class Plugin(PluginInstance, TriggerQueryHandler):
 
-    iconPath = os.path.join(os.path.dirname(__file__), "linguee.svg")
-    user_agent = "org.albert.linguee"
     lang = "deutsch-englisch"
+    user_agent = "org.albert.linguee"
 
-    def id(self):
-        return __name__
+    def __init__(self):
+        TriggerQueryHandler.__init__(
+            self,
+            id=md_id,
+            name=md_name,
+            description=md_description,
+            synopsis="<lin phrase>",
+            defaultTrigger="lin"
+        )
+        PluginInstance.__init__(self, extensions=[self])
+        self.iconUrls = [
+            os.path.join(os.path.dirname(__file__), "linguee.svg")
+        ]
 
-    def name(self):
-        return md_name
-
-    def description(self):
-        return md_description
-
-    def defaultTrigger(self):
-        return "lin "
-
-    def handleQuery(self, query):
+    def handleTriggerQuery(self, query):
         querystr = query.string.strip()
         if querystr:
             if not query.isValid:
@@ -52,12 +53,12 @@ class Plugin(QueryHandler):
                     result["word"]
                 )
                 results.append(
-                    Item(
+                    StandardItem(
                         id=result["word"],
-                        icon=[self.iconPath],
+                        iconUrls=self.iconUrls,
                         text=result["word"],
                         subtext=", ".join(result["translations"]),
-                        completion=result["word"],
+                        inputActionText=result["word"],
                         actions=[
                             Action(
                                 "open",
@@ -75,11 +76,11 @@ class Plugin(QueryHandler):
             query.add(results)
 
         else:
-            query.add(Item(
+            query.add(StandardItem(
                 id="lin",
                 text=md_name,
                 subtext="Enter a word to translate",
-                icon=[self.iconPath]
+                iconUrls=self.iconUrls,
             ))
 
     def get_suggestions(self, query):
