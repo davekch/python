@@ -18,6 +18,7 @@ md_version = "0.4"
 md_name = "Linguee"
 md_description = "Translate with Linguee."
 md_maintainers = "@davekch"
+md_lib_dependencies = ["requests"]
 
 
 class Plugin(PluginInstance, TriggerQueryHandler):
