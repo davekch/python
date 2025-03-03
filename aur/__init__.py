@@ -15,12 +15,12 @@ from urllib import request, parse
 
 from albert import *
 
-md_iid = '2.2'
-md_version = "1.9"
+md_iid = "3.0"
+md_version = "2.0"
 md_name = "AUR"
 md_description = "Query and install AUR packages"
 md_license = "MIT"
-md_url = "https://github.com/albertlauncher/python/tree/master/aur"
+md_url = "https://github.com/albertlauncher/python/tree/main/aur"
 md_authors = "@manuelschneid3r"
 
 
@@ -28,16 +28,11 @@ class Plugin(PluginInstance, TriggerQueryHandler):
 
     aur_url = "https://aur.archlinux.org/packages/"
     baseurl = 'https://aur.archlinux.org/rpc/'
+    iconUrls = [f"file:{Path(__file__).parent}/arch.svg"]
 
     def __init__(self):
-        TriggerQueryHandler.__init__(self,
-                                     id=md_id,
-                                     name=md_name,
-                                     description=md_description,
-                                     defaultTrigger='aur ')
-        PluginInstance.__init__(self, extensions=[self])
-
-        self.iconUrls = [f"file:{Path(__file__).parent}/arch.svg"]
+        PluginInstance.__init__(self)
+        TriggerQueryHandler.__init__(self)
 
         if which("yaourt"):
             self.install_cmdline = "yaourt -S aur/%s"
@@ -50,6 +45,9 @@ class Plugin(PluginInstance, TriggerQueryHandler):
         else:
             info("No supported AUR helper found.")
             self.install_cmdline = None
+
+    def defaultTrigger(self):
+        return 'aur '
 
     def configWidget(self):
         return [
@@ -80,7 +78,7 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                 data = json.loads(response.read().decode())
                 if data['type'] == "error":
                     query.add(StandardItem(
-                        id=md_id,
+                        id=self.id(),
                         text="Error",
                         subtext=data['error'],
                         iconUrls=self.iconUrls
@@ -94,7 +92,7 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                     for entry in results_json:
                         name = entry['Name']
                         item = StandardItem(
-                            id=md_id,
+                            id=self.id(),
                             iconUrls=self.iconUrls,
                             text=f"{entry['Name']} {entry['Version']}"
                         )
@@ -115,16 +113,14 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                                 id="inst",
                                 text="Install using %s" % pacman,
                                 callable=lambda n=name: runTerminal(
-                                    script=self.install_cmdline % n,
-                                    close_on_exit=False
+                                    script=self.install_cmdline % n + " ; exec $SHELL"
                                 )
                             ))
                             actions.append(Action(
                                 id="instnc",
                                 text="Install using %s (noconfirm)" % pacman,
                                 callable=lambda n=name: runTerminal(
-                                    script=self.install_cmdline % n + " --noconfirm",
-                                    close_on_exit=False
+                                    script=self.install_cmdline % n + " --noconfirm ; exec $SHELL"
                                 )
                             ))
 
@@ -141,7 +137,7 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                     query.add(results)
         else:
             query.add(StandardItem(
-                id=md_id,
+                id=self.id(),
                 text=md_name,
                 subtext="Enter a query to search the AUR",
                 iconUrls=self.iconUrls,

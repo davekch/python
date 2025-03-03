@@ -8,13 +8,12 @@ from collections import namedtuple
 
 from albert import *
 
-md_iid = '2.0'
-md_version = "1.4"
-md_id = "vpn"
+md_iid = "3.0"
+md_version = "2.0"
 md_name = "VPN"
 md_description = "Manage NetworkManager VPN connections"
 md_license = "MIT"
-md_url = "https://github.com/albertlauncher/python"
+md_url = "https://github.com/albertlauncher/python/tree/main/vpn"
 md_authors = ["@janeklb", "@Bierchermuesli", "@manuelschneid3r"]
 md_bin_dependencies = ["nmcli"]
 
@@ -24,12 +23,11 @@ class Plugin(PluginInstance, TriggerQueryHandler):
     VPNConnection = namedtuple('VPNConnection', ['name', 'connected'])
 
     def __init__(self):
-        TriggerQueryHandler.__init__(self,
-                                     id=md_id,
-                                     name=md_name,
-                                     description=md_description,
-                                     defaultTrigger='vpn ')
-        PluginInstance.__init__(self, extensions=[self])
+        PluginInstance.__init__(self)
+        TriggerQueryHandler.__init__(self)
+
+    def defaultTrigger(self):
+        return "vpn "
 
     def getVPNConnections(self):
         consStr = subprocess.check_output(

@@ -12,12 +12,12 @@ from time import sleep
 from albert import *
 import translators as ts
 
-md_iid = '2.2'
-md_version = "1.5"
+md_iid = "3.0"
+md_version = "2.0"
 md_name = "Translator"
 md_description = "Translate sentences using 'translators' package"
 md_license = "MIT"
-md_url = "https://github.com/albertlauncher/python/translators"
+md_url = "https://github.com/albertlauncher/python/tree/main/translators"
 md_authors = "@manuelschneid3r"
 md_lib_dependencies = "translators"
 
@@ -25,13 +25,9 @@ md_lib_dependencies = "translators"
 class Plugin(PluginInstance, TriggerQueryHandler):
 
     def __init__(self):
-        TriggerQueryHandler.__init__(self,
-                                     id=md_id,
-                                     name=md_name,
-                                     description=md_description,
-                                     synopsis="[[from] to] text",
-                                     defaultTrigger='tr ')
-        PluginInstance.__init__(self, extensions=[self])
+        PluginInstance.__init__(self)
+        TriggerQueryHandler.__init__(self)
+
         self.iconUrls = [f"file:{Path(__file__).parent}/google_translate.png"]
 
         self._translator = self.readConfig('translator', str)
@@ -70,6 +66,9 @@ class Plugin(PluginInstance, TriggerQueryHandler):
         self._lang = value
         self.writeConfig('lang', value)
 
+    def defaultTrigger(self):
+        return 'tr '
+
     def configWidget(self):
         return [
             {
@@ -88,6 +87,9 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                 'label': 'Default language',
             }
         ]
+
+    def synopsis(self, s):
+        return "[[from] to] text"
 
     def handleTriggerQuery(self, query):
         stripped = query.string.strip()
@@ -112,25 +114,32 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                                                 to_language=dst,
                                                 timeout=5)
 
-                query.add(StandardItem(
-                    id=md_id,
-                    text=translation,
-                    subtext=f"{src.upper()} > {dst.upper()}",
-                    iconUrls=self.iconUrls,
-                    actions=[
+                actions = []
+                if havePasteSupport():
+                    actions.append(
                         Action(
                             "paste", "Copy to clipboard and paste to front-most window",
                             lambda t=translation: setClipboardTextAndPaste(t)
-                        ),
-                        Action("copy", "Copy to clipboard",
-                               lambda t=translation: setClipboardText(t))
-                    ]
+                        )
+                    )
+
+                actions.append(
+                    Action("copy", "Copy to clipboard",
+                           lambda t=translation: setClipboardText(t))
+                )
+
+                query.add(StandardItem(
+                    id=self.id(),
+                    text=translation,
+                    subtext=f"{src.upper()} > {dst.upper()}",
+                    iconUrls=self.iconUrls,
+                    actions=actions
                 ))
 
             except Exception as e:
 
                 query.add(StandardItem(
-                    id=md_id,
+                    id=self.id(),
                     text="Error",
                     subtext=str(e),
                     iconUrls=self.iconUrls

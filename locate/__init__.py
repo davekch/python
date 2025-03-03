@@ -13,12 +13,12 @@ from pathlib import Path
 
 from albert import *
 
-md_iid = '2.0'
-md_version = "1.9"
+md_iid = "3.0"
+md_version = "2.0"
 md_name = "Locate"
 md_description = "Find and open files using locate"
 md_license = "MIT"
-md_url = "https://github.com/albertlauncher/python/tree/master/locate"
+md_url = "https://github.com/albertlauncher/python/tree/main/locate"
 md_bin_dependencies = "locate"
 md_authors = "@manuelschneid3r"
 
@@ -26,13 +26,8 @@ md_authors = "@manuelschneid3r"
 class Plugin(PluginInstance, TriggerQueryHandler):
 
     def __init__(self):
-        TriggerQueryHandler.__init__(self,
-                                     id=md_id,
-                                     name=md_name,
-                                     description=md_description,
-                                     synopsis='<locate params>',
-                                     defaultTrigger="'")
-        PluginInstance.__init__(self, extensions=[self])
+        PluginInstance.__init__(self)
+        TriggerQueryHandler.__init__(self)
 
         self.iconUrls = [
             "xdg:preferences-system-search",
@@ -41,6 +36,12 @@ class Plugin(PluginInstance, TriggerQueryHandler):
             "xdg:text-x-generic",
             f"file:{Path(__file__).parent}/locate.svg"
         ]
+
+    def synopsis(self, query):
+        return "<locate params>"
+
+    def defaultTrigger(self):
+        return "'"
 
     def handleTriggerQuery(self, query):
         if len(query.string) > 2:

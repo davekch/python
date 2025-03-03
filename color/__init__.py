@@ -15,27 +15,25 @@ starting point for people having a real need for color workflows. PR's welcome.
 """
 
 from albert import *
-from urllib.parse import quote_plus
 from string import hexdigits
 
-md_iid = '2.2'
-md_version = '1.2'
-md_name = 'Color'
-md_description = 'Display color for color codes'
-md_license = 'MIT'
-md_url = 'https://github.com/albertlauncher/python/color'
+md_iid = "3.0"
+md_version = "2.0"
+md_name = "Color"
+md_description = "Display color for color codes"
+md_license = "MIT"
+md_url = "https://github.com/albertlauncher/python/tree/main/color"
 md_authors = "@manuelschneid3r"
 
 
 class Plugin(PluginInstance, GlobalQueryHandler):
 
     def __init__(self):
-        GlobalQueryHandler.__init__(self,
-                                    id=md_id,
-                                    name=md_name,
-                                    description=md_description,
-                                    defaultTrigger='#')
-        PluginInstance.__init__(self, extensions=[self])
+        PluginInstance.__init__(self)
+        GlobalQueryHandler.__init__(self)
+
+    def defaultTrigger(self):
+        return '#'
 
     def handleGlobalQuery(self, query):
         rank_items = []
@@ -49,7 +47,7 @@ class Plugin(PluginInstance, GlobalQueryHandler):
                 rank_items.append(
                     RankItem(
                         StandardItem(
-                            id=md_id,
+                            id=self.id(),
                             text=s,
                             subtext="The color for this code.",
                             iconUrls=[f"gen:?background=%23{s}"],
@@ -61,10 +59,5 @@ class Plugin(PluginInstance, GlobalQueryHandler):
         return rank_items
 
     def configWidget(self):
-        return [
-            {
-                'type': 'label',
-                'text': __doc__.strip()
-            }
-        ]
+        return [{ 'type': 'label', 'text': __doc__.strip() }]
     

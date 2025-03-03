@@ -7,12 +7,12 @@ import subprocess
 
 from albert import *
 
-md_iid = '2.0'
-md_version = "1.4"
+md_iid = "3.0"
+md_version = "2.0"
 md_name = "CopyQ"
 md_description = "Access CopyQ clipboard"
 md_license = "BSD-2-Clause"
-md_url = "https://github.com/albertlauncher/python"
+md_url = "https://github.com/albertlauncher/python/tree/main/copyq"
 md_authors = ["@ManuelSchneid3r", "@BarrensZeppelin"]
 md_bin_dependencies = ["copyq"]
 
@@ -50,19 +50,15 @@ JSON.stringify(result);
 class Plugin(PluginInstance, TriggerQueryHandler):
 
     def __init__(self):
-        TriggerQueryHandler.__init__(self,
-                                     id=md_id,
-                                     name=md_name,
-                                     description=md_description,
-                                     synopsis="<filter>",
-                                     defaultTrigger='cq ')
-        PluginInstance.__init__(self, extensions=[self])
+        PluginInstance.__init__(self)
+        TriggerQueryHandler.__init__(self)
+
+    def defaultTrigger(self):
+        return "cp "
 
     def handleTriggerQuery(self, query):
         items = []
-        q_string = query.string
-
-        script = copyq_script_getMatches % q_string if q_string else copyq_script_getAll
+        script = copyq_script_getMatches % query.string if query.string else copyq_script_getAll
         proc = subprocess.run(["copyq", "-"], input=script.encode(), stdout=subprocess.PIPE)
         json_arr = json.loads(proc.stdout.decode())
 
@@ -74,12 +70,12 @@ class Plugin(PluginInstance, TriggerQueryHandler):
             else:
                 text = " ".join(filter(None, text.replace("\n", " ").split(" ")))
 
-            act = lambda script, row=row: (
-                lambda: runDetachedProcess(["copyq", script % row])
+            act = lambda s=script, r=row: (
+                lambda: runDetachedProcess(["copyq", s % r])
             )
             items.append(
                 StandardItem(
-                    id=md_id,
+                    id=self.id(),
                     iconUrls=["xdg:copyq"],
                     text=text,
                     subtext="%s: %s" % (row, ", ".join(json_obj["mimetypes"])),

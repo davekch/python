@@ -15,12 +15,12 @@ Roll any number of dice using the format `_d_`.
 Example: "roll 2d6 3d8 1d20"
 """
 
-md_iid = '2.2'
-md_version = "1.4"
+md_iid = "3.0"
+md_version = "2.0"
 md_name = "Dice Roll"
 md_description = "Roll any number of dice"
 md_license = "MIT"
-md_url = "https://github.com/albertlauncher/python"
+md_url = "https://github.com/albertlauncher/python/tree/main/dice_roll"
 md_authors = "@DenverCoder1"
 
 
@@ -132,29 +132,24 @@ class Plugin(albert.PluginInstance, albert.TriggerQueryHandler):
     """A plugin to roll dice"""
 
     def __init__(self):
-        albert.TriggerQueryHandler.__init__(self,
-            id=md_id,
-            name=md_name,
-            description=md_description,
-            synopsis="<amount>d<sides> [<amount>d<sides> ...]",
-            defaultTrigger="roll ",
-        )
-        albert.PluginInstance.__init__(self, extensions=[self])
+        albert.PluginInstance.__init__(self)
+        albert.TriggerQueryHandler.__init__(self)
+
+    def synopsis(self, query):
+        return "<amount>d<sides> [<amount>d<sides> ...]"
+
+    def defaultTrigger(self):
+        return "roll "
 
     def configWidget(self):
-        return [
-            {
-                'type': 'label',
-                'text': __doc__.strip(),
-            }
-        ]
+        return [{ 'type': 'label', 'text': __doc__.strip() }]
 
     def handleTriggerQuery(self, query: albert.Query) -> None:
         query_string = query.string.strip()
         try:
             items = get_items(query_string)
             query.add(items)
-        except Exception as e:
+        except Exception:
             query.add([albert.StandardItem(
                 id="error",
                 iconUrls=[get_icon_path(None)],

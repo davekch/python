@@ -8,12 +8,12 @@ from json import load, loads, dumps
 from pathlib import Path
 from threading import Thread, Event
 
-md_iid = "2.0"
-md_version = "1.1"
+md_iid = "3.0"
+md_version = "2.0"
 md_name = "CoinGecko"
 md_description = "Access CoinGecko"
 md_license = "MIT"
-md_url = "https://github.com/albertlauncher/python/tree/master/coingecko"
+md_url = "https://github.com/albertlauncher/python/tree/main/coingecko"
 md_authors = "@manuelschneid3r"
 
 
@@ -71,9 +71,9 @@ class NameItem(StandardItem):
             iconUrls=Plugin.iconUrls,
             actions=[
                 Action("show", f"Show {name} on CoinGecko",
-                       lambda id=identifier: openUrl(Plugin.coinsUrl + id)),
+                       lambda coin_id=identifier: openUrl(Plugin.coinsUrl + coin_id)),
                 Action("url", "Copy URL to clipboard",
-                       lambda id=identifier: setClipboardText(Plugin.coinsUrl + id))
+                       lambda coin_id=identifier: setClipboardText(Plugin.coinsUrl + coin_id))
             ]
         )
         self.name = name
@@ -86,22 +86,24 @@ class Plugin(PluginInstance, IndexQueryHandler):
     iconUrls = [f"file:{Path(__file__).parent}/coingecko.png"]
 
     def __init__(self):
-        IndexQueryHandler.__init__(
-            self, md_id, md_name, md_description,
-            defaultTrigger='cg ',
-            synopsis='< symbol | name >'
-        )
-        PluginInstance.__init__(self, extensions=[self])
+        PluginInstance.__init__(self)
+        IndexQueryHandler.__init__(self)
 
         self.items = []
         self.mtime = 0
-        self.coinCacheFilePath = self.cacheLocation / "coins.json"
+        self.coinCacheFilePath = self.cacheLocation() / "coins.json"
         self.thread = CoinFetcherThread(self.updateIndexItems, self.coinCacheFilePath)
         self.thread.start()
 
-    def finalize(self):
+    def __del__(self):
         self.thread.stop()
         self.thread.join()
+
+    def defaultTrigger(self):
+        return 'cg '
+
+    def synopsis(self, query):
+        return "< symbol | name >"
 
     def updateIndexItems(self):
         if self.coinCacheFilePath.is_file() and (mtime := self.coinCacheFilePath.lstat().st_mtime) > self.mtime:
@@ -128,7 +130,7 @@ class Plugin(PluginInstance, IndexQueryHandler):
 
     # override default trigger handling to sort by rank
     def handleTriggerQuery(self, query):
-        qs = query.string.strip().lower()
+        m = Matcher(query.string)
         for item in self.items:
-            if qs in item.name.lower() or qs in item.symbol.lower():
+            if m.match(item.symbol, item.name):
                 query.add(item)

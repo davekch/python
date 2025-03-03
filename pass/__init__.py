@@ -7,12 +7,12 @@ import fnmatch
 import os
 from albert import *
 
-md_iid = "2.1"
-md_version = "1.6"
+md_iid = "3.0"
+md_version = "2.0"
 md_name = "Pass"
 md_description = "Manage passwords in pass"
 md_license = "BSD-3"
-md_url = "https://github.com/albertlauncher/python/tree/master/pass"
+md_url = "https://github.com/albertlauncher/python/tree/main/pass"
 md_authors = ["@benedictdudel", "@maxmil", "@Pete-Hamlin"]
 md_bin_dependencies = ["pass"]
 
@@ -22,15 +22,8 @@ PASS_DIR = os.environ.get("PASSWORD_STORE_DIR", os.path.join(HOME_DIR, ".passwor
 
 class Plugin(PluginInstance, TriggerQueryHandler):
     def __init__(self):
-        TriggerQueryHandler.__init__(
-            self,
-            id=md_id,
-            name=md_name,
-            description=md_description,
-            synopsis="<pass-name>",
-            defaultTrigger="pass ",
-        )
-        PluginInstance.__init__(self, extensions=[self])
+        PluginInstance.__init__(self)
+        TriggerQueryHandler.__init__(self)
         self.iconUrls = ["xdg:dialog-password"]
         self._use_otp = self.readConfig("use_otp", bool) or False
         self._otp_glob = self.readConfig("otp_glob", str) or "*-otp.gpg"
@@ -54,6 +47,12 @@ class Plugin(PluginInstance, TriggerQueryHandler):
         print(f"Setting _otp_glob to {value}")
         self._otp_glob = value
         self.writeConfig("otp_glob", value)
+
+    def defaultTrigger(self):
+        return "pass "
+
+    def synopsis(self, query):
+        return "<pass-name>"
 
     def configWidget(self):
         return [

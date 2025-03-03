@@ -1,36 +1,55 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2024 Manuel Schneider
 
-from albert import *
+import albert
 
-md_iid = '2.0'
-md_version = '1.2'
-md_name = 'Zeal'
-md_description = 'Search in Zeal docs'
+md_iid = "3.0"
+md_version = "3.0"
+md_name = "Zeal"
+md_description = "Search in Zeal docs"
 md_license = "MIT"
-md_url = 'https://github.com/albertlauncher/python/zeal'
+md_url = "https://github.com/albertlauncher/python/tree/main/zeal"
 md_authors = "@manuelschneid3r"
 md_bin_dependencies = ['zeal']
 
+def createItem(query: str):
+    return albert.StandardItem(
+        id=md_name,
+        text=md_name,
+        subtext=f"Search '{query}' in Zeal",
+        iconUrls=["xdg:zeal"],
+        actions=[albert.Action("zeal", "Search in Zeal",
+                               lambda q=query: albert.runDetachedProcess(['zeal', q]))]
+    )
 
-class Plugin(PluginInstance, TriggerQueryHandler):
+class FBH(albert.FallbackHandler):
+
+    def id(self):
+        return "zeal_fbh"
+
+    def name(self):
+        return md_name
+
+    def description(self):
+        return md_description
+
+    def fallbacks(self, s):
+        return [createItem(s)] if s else []
+
+
+class Plugin(albert.PluginInstance, albert.TriggerQueryHandler):
+
     def __init__(self):
-        TriggerQueryHandler.__init__(self,
-                                     id=md_id,
-                                     name=md_name,
-                                     description=md_description,
-                                     defaultTrigger='z ')
-        PluginInstance.__init__(self, extensions=[self])
+        albert.PluginInstance.__init__(self)
+        albert.TriggerQueryHandler.__init__(self)
+        self.fbh = FBH()
+
+    def defaultTrigger(self):
+        return "z "
+
+    def extensions(self):
+        return [self, self.fbh]
 
     def handleTriggerQuery(self, query):
-        stripped = query.string.strip()
-        if stripped:
-            query.add(
-                StandardItem(
-                    id=md_name,
-                    text=md_name,
-                    subtext=f"Search '{stripped}' in Zeal",
-                    iconUrls=["xdg:zeal"],
-                    actions=[Action("zeal", "Search in Zeal", lambda s=stripped: runDetachedProcess(['zeal', s]))]
-                )
-            )
+        if stripped := query.string.strip():
+            query.add(createItem(stripped))
