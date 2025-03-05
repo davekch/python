@@ -13,7 +13,7 @@ import os
 import time
 
 
-md_iid = "2.0"
+md_iid = "3.0"
 md_version = "0.4"
 md_name = "Linguee"
 md_description = "Translate with Linguee."
@@ -27,18 +27,17 @@ class Plugin(PluginInstance, TriggerQueryHandler):
     user_agent = "org.albert.linguee"
 
     def __init__(self):
-        TriggerQueryHandler.__init__(
-            self,
-            id=md_id,
-            name=md_name,
-            description=md_description,
-            synopsis="<lin phrase>",
-            defaultTrigger="lin"
-        )
-        PluginInstance.__init__(self, extensions=[self])
+        TriggerQueryHandler.__init__(self)
+        PluginInstance.__init__(self)
         self.iconUrls = [
             os.path.join(os.path.dirname(__file__), "linguee.svg")
         ]
+
+    def synopsis(self, query):
+        return "<lin phrase>"
+
+    def defaultTrigger(self):
+        return "lin "
 
     def handleTriggerQuery(self, query):
         querystr = query.string.strip()
